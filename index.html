@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Check - Mood Journal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .mood-card {
+            transition: all 0.3s ease;
+        }
+        .mood-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .loading {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
+    
+    <!-- App Container -->
+    <div id="app" class="container mx-auto px-4 py-8 max-w-md">
+        
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="text-center">
+            <div class="bg-white rounded-3xl p-8 shadow-xl">
+                <div class="loading w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full mx-auto mb-4"></div>
+                <h2 class="text-xl font-bold text-gray-700">Loading Vibe Check...</h2>
+            </div>
+        </div>
+
+        <!-- Login/Register Screen -->
+        <div id="auth-screen" class="hidden">
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-bold gradient-bg bg-clip-text text-transparent mb-2">Vibe Check</h1>
+                <p class="text-gray-600">Your AI-powered mood companion</p>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" class="bg-white rounded-3xl p-6 shadow-xl">
+                <h2 class="text-2xl font-bold mb-6 text-center">Welcome Back!</h2>
+                
+                <div class="space-y-4">
+                    <input type="email" id="login-email" placeholder="Email" 
+                           class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                    
+                    <input type="password" id="login-password" placeholder="Password" 
+                           class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                    
+                    <button onclick="loginUser()" 
+                            class="w-full gradient-bg text-white p-4 rounded-xl font-bold hover:shadow-lg transition-all">
+                        Log In
+                    </button>
+                </div>
+                
+                <p class="text-center mt-4 text-gray-600">
+                    New here? 
+                    <button onclick="showRegister()" class="text-purple-600 font-semibold hover:underline">
+                        Create Account
+                    </button>
+                </p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="bg-white rounded-3xl p-6 shadow-xl hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center">Join Vibe Check!</h2>
+                
+                <div class="space-y-4">
+                    <input type="text" id="reg-first-name" placeholder="First Name" 
+                           class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                    
+                    <input type="text" id="reg-username" placeholder="Username" 
+                           class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                    
+                    <input type="email" id="reg-email" placeholder="Email" 
+                           class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                    
+                    <input type="password" id="reg-password" placeholder="Password (min 6 chars)" 
+                           class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                    
+                    <select id="reg-age-range" 
+                            class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                        <option value="18-24">18-24 years old</option>
+                        <option value="25-34" selected>25-34 years old</option>
+                        <option value="35-44">35-44 years old</option>
+                        <option value="45+">45+ years old</option>
+                    </select>
+                    
+                    <button onclick="registerUser()" 
+                            class="w-full gradient-bg text-white p-4 rounded-xl font-bold hover:shadow-lg transition-all">
+                        Create Account
+                    </button>
+                </div>
+                
+                <p class="text-center mt-4 text-gray-600">
+                    Already have an account? 
+                    <button onclick="showLogin()" class="text-purple-600 font-semibold hover:underline">
+                        Log In
+                    </button>
+                </p>
+            </div>
+        </div>
+
+        <!-- Main App Screen -->
+        <div id="main-app" class="hidden">
+            
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold gradient-bg bg-clip-text text-transparent mb-2">Vibe Check</h1>
+                <p class="text-gray-600" id="welcome-message">How are you feeling today?</p>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-center mb-8">
+                <div class="bg-white rounded-2xl p-2 shadow-lg flex space-x-2">
+                    <button onclick="showCheckin()" id="nav-checkin" 
+                            class="px-6 py-2 rounded-xl font-semibold transition-all gradient-bg text-white">
+                        Check-in
+                    </button>
+                    <button onclick="showDashboard()" id="nav-dashboard" 
+                            class="px-6 py-2 rounded-xl font-semibold transition-all text-gray-600 hover:text-purple-600">
+                        Dashboard
+                    </button>
+                </div>
+            </div>
+
+            <!-- Check-in Screen -->
+            <div id="checkin-screen">
+                
+                <!-- Step 1: Mood Selection -->
+                <div id="mood-selection" class="bg-white rounded-3xl p-6 shadow-xl">
+                    <h2 class="text-xl font-bold mb-6 text-center">What's your vibe today?</h2>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center cursor-pointer hover:border-purple-400" 
+                             onclick="selectMood(10, 'Amazing', '🤩')">
+                            <div class="text-4xl mb-2">🤩</div>
+                            <div class="font-bold">Amazing</div>
+                            <div class="text-sm text-gray-500">10/10</div>
+                        </div>
+                        
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center cursor-pointer hover:border-purple-400" 
+                             onclick="selectMood(8, 'Great', '😊')">
+                            <div class="text-4xl mb-2">😊</div>
+                            <div class="font-bold">Great</div>
+                            <div class="text-sm text-gray-500">8/10</div>
+                        </div>
+                        
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center cursor-pointer hover:border-purple-400" 
+                             onclick="selectMood(7, 'Good', '🙂')">
+                            <div class="text-4xl mb-2">🙂</div>
+                            <div class="font-bold">Good</div>
+                            <div class="text-sm text-gray-500">7/10</div>
+                        </div>
+                        
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center cursor-pointer hover:border-purple-400" 
+                             onclick="selectMood(5, 'Okay', '😐')">
+                            <div class="text-4xl mb-2">😐</div>
+                            <div class="font-bold">Okay</div>
+                            <div class="text-sm text-gray-500">5/10</div>
+                        </div>
+                        
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center cursor-pointer hover:border-purple-400" 
+                             onclick="selectMood(4, 'Meh', '😕')">
+                            <div class="text-4xl mb-2">😕</div>
+                            <div class="font-bold">Meh</div>
+                            <div class="text-sm text-gray-500">4/10</div>
+                        </div>
+                        
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center cursor-pointer hover:border-purple-400" 
+                             onclick="selectMood(2, 'Low', '😢')">
+                            <div class="text-4xl mb-2">😢</div>
+                            <div class="font-bold">Low</div>
+                            <div class="text-sm text-gray-500">2/10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Activities -->
+                <div id="activities-selection" class="bg-white rounded-3xl p-6 shadow-xl hidden">
+                    <h2 class="text-xl font-bold mb-4 text-center">What did you do today?</h2>
+                    <p class="text-gray-600 text-center mb-6 text-sm">This helps AI understand your patterns</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">😴 Hours of sleep</label>
+                            <input type="number" id="sleep-hours" min="0" max="12" step="0.5" placeholder="7.5"
+                                   class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">🏃‍♀️ Exercise (minutes)</label>
+                            <input type="number" id="exercise-minutes" min="0" max="300" placeholder="30"
+                                   class="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-3">👥 Social interaction?</label>
+                            <div class="flex gap-3">
+                                <button onclick="setSocial(true)" id="social-yes" 
+                                        class="flex-1 p-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:border-purple-400 transition-all">
+                                    Yes! 😊
+                                </button>
+                                <button onclick="setSocial(false)" id="social-no" 
+                                        class="flex-1 p-3 border-2 border-gray-200 rounded-xl font-semibold text-gray-600 hover:border-purple-400 transition-all">
+                                    Nope 🏠
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">💼 Work stress (1-10)</label>
+                            <input type="range" id="work-stress" min="1" max="10" value="5" 
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            <div class="flex justify-between text-sm text-gray-500 mt-1">
+                                <span>Low</span>
+                                <span id="stress-value" class="font-bold text-purple-600">5</span>
+                                <span>High</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="backToMood()" 
+                                class="flex-1 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50">
+                            ← Back
+                        </button>
+                        <button onclick="showNote()" 
+                                class="flex-1 gradient-bg text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+                            Next →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Optional Note -->
+                <div id="note-entry" class="bg-white rounded-3xl p-6 shadow-xl hidden">
+                    <h2 class="text-xl font-bold mb-4 text-center">Anything else on your mind?</h2>
+                    <p class="text-gray-600 text-center mb-6 text-sm">Optional - AI will analyze this for insights</p>
+                    
+                    <textarea id="mood-note" placeholder="Today was interesting because..." 
+                              class="w-full h-32 p-4 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:outline-none resize-none"></textarea>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="backToActivities()" 
+                                class="flex-1 py-3 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50">
+                            ← Back
+                        </button>
+                        <button onclick="submitMood()" id="submit-btn"
+                                class="flex-1 gradient-bg text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all">
+                            Complete Check-in ✨
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Screen -->
+            <div id="dashboard-screen" class="hidden">
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white rounded-2xl p-4 shadow-lg text-center">
+                        <div class="text-2xl font-bold text-purple-600" id="streak-count">0</div>
+                        <div class="text-sm text-gray-600">Day Streak</div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 shadow-lg text-center">
+                        <div class="text-2xl font-bold text-blue-600" id="avg-mood">0.0</div>
+                        <div class="text-sm text-gray-600">Avg Mood</div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 shadow-lg text-center">
+                        <div class="text-2xl font-bold text-green-600" id="trend-status">--</div>
+                        <div class="text-sm text-gray-600">Trend</div>
+                    </div>
+                </div>
+
+                <!-- AI Insights -->
+                <div class="gradient-bg rounded-3xl p-6 text-white mb-6 shadow-xl">
+                    <h3 class="text-xl font-bold mb-4">🧠 AI Insights For You</h3>
+                    <div id="insights-container">
+                        <p class="text-center opacity-75">Loading insights...</p>
+                    </div>
+                </div>
+
+                <!-- Mood Chart -->
+                <div class="bg-white rounded-3xl p-6 shadow-xl">
+                    <h3 class="text-lg font-bold mb-4">📊 Your Week in Vibes</h3>
+                    <div id="mood-chart" class="flex justify-between items-end h-32 bg-gradient-to-t from-purple-50 to-transparent rounded-xl p-4">
+                        <!-- Chart will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Screen -->
+            <div id="success-screen" class="hidden text-center">
+                <div class="bg-white rounded-3xl p-8 shadow-xl">
+                    <div class="text-6xl mb-4">✨</div>
+                    <h2 class="text-2xl font-bold mb-4 gradient-bg bg-clip-text text-transparent">Vibe Checked!</h2>
+                    <p class="text-gray-600 mb-4">AI is analyzing your patterns...</p>
+                    <div class="w-full bg-purple-200 rounded-full h-3">
+                        <div class="gradient-bg h-3 rounded-full transition-all duration-2000" style="width: 90%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Messages -->
+        <div id="error-message" class="hidden fixed top-4 left-4 right-4 bg-red-500 text-white p-4 rounded-xl shadow-lg z-50">
+            <p id="error-text"></p>
+        </div>
+
+        <!-- Success Messages -->
+        <div id="success-message" class="hidden fixed top-4 left-4 right-4 bg-green-500 text-white p-4 rounded-xl shadow-lg z-50">
+            <p id="success-text"></p>
+        </div>
+    </div>
+
+    <script>
+        // App state
+        let currentUser = null;
+        let currentMood = {};
+        let currentView = 'loading';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                hideElement('loading-screen');
+                showElement('auth-screen');
+                currentView = 'auth';
+            }, 1500);
+
+            // Update work stress display
+            document.getElementById('work-stress').addEventListener('input', function() {
+                document.getElementById('stress-value').textContent = this.value;
+            });
+        });
+
+        // Utility functions
+        function showElement(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(id).classList.add('fade-in');
+        }
+
+        function hideElement(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('error-text').textContent = message;
+            showElement('error-message');
+            setTimeout(() => hideElement('error-message'), 4000);
+        }
+
+        function showSuccess(message) {
+            document.getElementById('success-text').textContent = message;
+            showElement('success-message');
+            setTimeout(() => hideElement('success-message'), 3000);
+        }
+
+        // Auth functions
+        function showRegister() {
+            hideElement('login-form');
+            showElement('register-form');
+        }
+
+        function showLogin() {
+            hideElement('register-form');
+            showElement('login-form');
+        }
+
+        async function registerUser() {
+            const userData = {
+                first_name: document.getElementById('reg-first-name').value,
+                username: document.getElementById('reg-username').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value,
+                age_range: document.getElementById('reg-age-range').value
+            };
+
+            // Basic validation
+            if (!userData.first_name || !userData.username || !userData.email || !userData.password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            if (userData.password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(userData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentUser = result;
+                    showSuccess(result.message);
+                    setTimeout(() => {
+                        hideElement('auth-screen');
+                        showElement('main-app');
+                        document.getElementById('welcome-message').textContent = `Welcome, ${userData.first_name}!`;
+                        currentView = 'main';
+                    }, 1000);
+                } else {
+                    showError(result.error);
+                }
+            } catch (error) {
+                showError('Registration failed. Is your server running?');
+            }
+        }
+
+        async function loginUser() {
+            const loginData = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            };
+
+            if (!loginData.email || !loginData.password) {
+                showError('Please enter email and password');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(loginData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    currentUser = result;
+                    showSuccess(`Welcome back, ${result.first_name}!`);
+                    setTimeout(() => {
+                        hideElement('auth-screen');
+                        showElement('main-app');
+                        document.getElementById('welcome-message').textContent = `Welcome back, ${result.first_name}!`;
+                        loadDashboard();
+                        currentView = 'main';
+                    }, 1000);
+                } else {
+                    showError(result.error);
+                }
+            } catch (error) {
+                showError('Login failed. Is your server running?');
+            }
+        }
+
+        // Mood tracking functions
+        function selectMood(value, label, emoji) {
+            currentMood = { mood_value: value, mood_label: label, emoji: emoji };
+            
+            // Highlight selected mood
+            document.querySelectorAll('.mood-card').forEach(card => {
+                card.classList.remove('border-purple-400', 'bg-purple-50');
+                card.classList.add('border-gray-200');
+            });
+            event.target.closest('.mood-card').classList.add('border-purple-400', 'bg-purple-50');
+            
+            // Move to activities after short delay
+            setTimeout(() => {
+                hideElement('mood-selection');
+                showElement('activities-selection');
+            }, 500);
+        }
+
+        function setSocial(value) {
+            currentMood.social_interaction = value;
+            
+            // Update button styles
+            document.getElementById('social-yes').classList.remove('border-purple-400', 'bg-purple-50', 'text-purple-600');
+            document.getElementById('social-no').classList.remove('border-purple-400', 'bg-purple-50', 'text-purple-600');
+            
+            if (value) {
+                document.getElementById('social-yes').classList.add('border-purple-400', 'bg-purple-50', 'text-purple-600');
+            } else {
+                document.getElementById('social-no').classList.add('border-purple-400', 'bg-purple-50', 'text-purple-600');
+            }
+        }
+
+        function showNote() {
+            // Collect activity data
+            currentMood.activities = {
+                sleep_hours: parseFloat(document.getElementById('sleep-hours').value) || null,
+                exercise_minutes: parseInt(document.getElementById('exercise-minutes').value) || 0,
+                social_interaction: currentMood.social_interaction || false,
+                work_stress_level: parseInt(document.getElementById('work-stress').value) || 5
+            };
+            
+            hideElement('activities-selection');
+            showElement('note-entry');
+        }
+
+        function backToMood() {
+            hideElement('activities-selection');
+            showElement('mood-selection');
+        }
+
+        function backToActivities() {
+            hideElement('note-entry');
+            showElement('activities-selection');
+        }
+
+        async function submitMood() {
+            // Add note to mood data
+            currentMood.quick_note = document.getElementById('mood-note').value;
+            
+            // Show loading on button
+            document.getElementById('submit-btn').innerHTML = '<div class="loading w-5 h-5 border-2 border-white border-t-transparent rounded-full mx-auto"></div>';
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/mood-entry', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(currentMood)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    hideElement('checkin-screen');
+                    showElement('success-screen');
+                    
+                    // Show success message
+                    showSuccess(result.message);
+                    
+                    // Show AI analysis if available
+                    if (result.ai_analysis) {
+                        setTimeout(() => {
+                            showSuccess(result.ai_analysis.message);
+                        }, 2000);
+                    }
+                    
+                    // Reset form and go to dashboard
+                    setTimeout(() => {
+                        resetCheckinForm();
+                        hideElement('success-screen');
+                        showDashboard();
+                        loadDashboard();
+                    }, 3000);
+                } else {
+                    showError(result.error);
+                    document.getElementById('submit-btn').innerHTML = 'Complete Check-in ✨';
+                }
+            } catch (error) {
+                showError('Failed to save mood. Check your connection.');
+                document.getElementById('submit-btn').innerHTML = 'Complete Check-in ✨';
+            }
+        }
+
+        function resetCheckinForm() {
+            currentMood = {};
+            document.getElementById('sleep-hours').value = '';
+            document.getElementById('exercise-minutes').value = '';
+            document.getElementById('mood-note').value = '';
+            document.getElementById('work-stress').value = '5';
+            document.getElementById('stress-value').textContent = '5';
+            
+            // Reset button styles
+            document.querySelectorAll('.mood-card').forEach(card => {
+                card.classList.remove('border-purple-400', 'bg-purple-50');
+                card.classList.add('border-gray-200');
+            });
+            
+            document.getElementById('social-yes').classList.remove('border-purple-400', 'bg-purple-50', 'text-purple-600');
+            document.getElementById('social-no').classList.remove('border-purple-400', 'bg-purple-50', 'text-purple-600');
+        }
+
+        // Navigation functions
+        function showCheckin() {
+            hideElement('dashboard-screen');
+            showElement('checkin-screen');
+            showElement('mood-selection');
+            hideElement('activities-selection');
+            hideElement('note-entry');
+            
+            // Update nav buttons
+            document.getElementById('nav-checkin').classList.add('gradient-bg', 'text-white');
+            document.getElementById('nav-checkin').classList.remove('text-gray-600');
+            document.getElementById('nav-dashboard').classList.remove('gradient-bg', 'text-white');
+            document.getElementById('nav-dashboard').classList.add('text-gray-600');
+        }
+
+        function showDashboard() {
+            hideElement('checkin-screen');
+            showElement('dashboard-screen');
+            
+            // Update nav buttons
+            document.getElementById('nav-dashboard').classList.add('gradient-bg', 'text-white');
+            document.getElementById('nav-dashboard').classList.remove('text-gray-600');
+            document.getElementById('nav-checkin').classList.remove('gradient-bg', 'text-white');
+            document.getElementById('nav-checkin').classList.add('text-gray-600');
+        }
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch('http://localhost:5000/api/dashboard', {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.mood_data) {
+                    // Update stats
+                    document.getElementById('streak-count').textContent = data.stats.current_streak;
+                    document.getElementById('avg-mood').textContent = data.stats.average_mood;
+                    document.getElementById('trend-status').textContent = data.stats.trend;
+
+                    // Update insights
+                    const insightsContainer = document.getElementById('insights-container');
+                    if (data.insights && data.insights.length > 0) {
+                        insightsContainer.innerHTML = data.insights.map(insight => `
+                            <div class="bg-white bg-opacity-20 rounded-xl p-4 mb-3">
+                                <h4 class="font-bold mb-2">${insight.title}</h4>
+                                <p class="text-sm opacity-90">${insight.description}</p>
+                                <span class="inline-block mt-2 text-xs px-2 py-1 bg-white bg-opacity-30 rounded-full">
+                                    ${insight.confidence_level} confidence
+                                </span>
+                            </div>
+                        `).join('');
+                    } else {
+                        insightsContainer.innerHTML = '<p class="text-center opacity-75">Keep checking in to see AI insights!</p>';
+                    }
+
+                    // Update mood chart
+                    const chartContainer = document.getElementById('mood-chart');
+                    if (data.mood_data && data.mood_data.length > 0) {
+                        chartContainer.innerHTML = data.mood_data.reverse().map(day => `
+                            <div class="flex flex-col items-center group cursor-pointer">
+                                <div class="text-xs text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    ${day.mood_label}
+                                </div>
+                                <div class="w-6 gradient-bg rounded-t-lg transition-all duration-500 group-hover:scale-110" 
+                                     style="height: ${day.mood_value * 8}px;"></div>
+                                <p class="text-sm mt-2 font-medium">${day.day}</p>
+                                <p class="text-xs text-gray-500">${day.mood_value}/10</p>
+                            </div>
+                        `).join('');
+                    } else {
+                        chartContainer.innerHTML = '<p class="text-center text-gray-500 w-full">No mood data yet. Start by checking in!</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('Dashboard load error:', error);
+                showError('Failed to load dashboard data');
+            }
+        }
+
+        // Test function to create demo data
+        async function createDemoData() {
+            try {
+                const response = await fetch('http://localhost:5000/api/create-demo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('Demo data created! You can login with: demo_user / demo123');
+                    
+                    // Auto-fill login form
+                    document.getElementById('login-email').value = 'demo@test.com';
+                    document.getElementById('login-password').value = 'demo123';
+                } else {
+                    showError(result.error);
+                }
+            } catch (error) {
+                showError('Failed to create demo data');
+            }
+        }
+
+        // Add demo button (for testing)
+        setTimeout(() => {
+            if (document.getElementById('auth-screen') && !document.getElementById('auth-screen').classList.contains('hidden')) {
+                const authScreen = document.getElementById('auth-screen');
+                const demoButton = document.createElement('div');
+                demoButton.className = 'text-center mt-4';
+                demoButton.innerHTML = `
+                    <button onclick="createDemoData()" 
+                            class="text-sm text-purple-600 hover:underline font-semibold">
+                        🧪 Create Demo User (for testing)
+                    </button>
+                `;
+                authScreen.appendChild(demoButton);
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
